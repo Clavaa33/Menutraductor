@@ -1,11 +1,11 @@
-# 🍽️ Menutraductor
+# Menutraductor
 
 **Aplicació web per traduir menús de restaurant mitjançant Intel·ligència Artificial**  
 Pràctica 4 · Microsoft Azure · GDDV 2026
 
 ---
 
-## 📌 Descripció
+## Descripció
 
 Menutraductor és una aplicació web que permet pujar una foto d'un menú de restaurant en qualsevol idioma i obtenir-ne la traducció automàtica a l'instant. L'aplicació combina dos serveis d'Azure AI per fer-ho possible:
 
@@ -14,7 +14,7 @@ Menutraductor és una aplicació web que permet pujar una foto d'un menú de res
 
 ---
 
-## 🛠️ Serveis d'Azure utilitzats
+## Serveis d'Azure utilitzats
 
 | Servei | Pla | Funció |
 |--------|-----|--------|
@@ -24,7 +24,7 @@ Menutraductor és una aplicació web que permet pujar una foto d'un menú de res
 
 ---
 
-## ⚙️ Arquitectura
+## Arquitectura
 
 ```
 Usuari (navegador)
@@ -39,7 +39,7 @@ Azure App Service (Flask/Python)
 
 ---
 
-## 🚀 Com desplegar el projecte
+## Com desplegar el projecte
 
 ### Prerequisits
 
@@ -84,7 +84,7 @@ Obre el navegador a `http://localhost:5000`
 
 ---
 
-## ☁️ Desplegament a Azure
+## Desplegament a Azure
 
 ### Recursos necessaris (Azure Portal)
 
@@ -125,13 +125,15 @@ Menutraductor/
 
 ---
 
-## 🌍 Idiomes suportats
+## Idiomes suportats
 
 Català · Castellà · Anglès · Francès · Alemany · Italià · Japonès · Xinès
 
+Podem afegir més en funció de la demanda.
+
 ---
 
-## 📸 Com utilitzar l'aplicació
+## Com utilitzar l'aplicació
 
 1. Puja una foto d'un menú (JPG, PNG, WEBP)
 2. Fes clic a **"Extreure text"** per detectar el text amb OCR
@@ -141,7 +143,7 @@ Català · Castellà · Anglès · Francès · Alemany · Italià · Japonès ·
 
 ---
 
-## 💰 Cost estimat
+## Cost estimat
 
 Tots els serveis fan servir el pla **Free** d'Azure:
 - Computer Vision F0: 20 crides/minut, 5.000 crides/mes
@@ -152,6 +154,6 @@ Tots els serveis fan servir el pla **Free** d'Azure:
 
 ---
 
-## 👤 Autor
+## Autors
 
-David Clavaguera · GDDV · Universitat de Girona · 2026
+David Clavaguera Gomez (u1997650) i Àlex Cantos Gilabert (u1995380) · GDDV · Universitat de Girona · 2026
