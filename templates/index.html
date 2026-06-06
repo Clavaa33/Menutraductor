@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ReadMyMenu — Traductor de Menús</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --cream: #F7F3EE;
+      --warm-white: #FDFAF7;
+      --charcoal: #1C1C1A;
+      --brown: #6B4F3A;
+      --gold: #C9A84C;
+      --gold-light: #E8D5A3;
+      --muted: #9A8F85;
+      --border: #E2D9CF;
+      --success: #4A7C59;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--cream);
+      color: var(--charcoal);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Noise texture overlay */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Header */
+    header {
+      position: relative;
+      padding: 3rem 2rem 2rem;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+      background: var(--warm-white);
+    }
+
+    .header-eyebrow {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.7rem;
+      font-weight: 500;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 0.75rem;
+    }
+
+    header h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2.5rem, 6vw, 4rem);
+      font-weight: 600;
+      color: var(--charcoal);
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+    }
+
+    header h1 em {
+      font-style: italic;
+      color: var(--brown);
+    }
+
+    .header-sub {
+      font-size: 0.9rem;
+      color: var(--muted);
+      margin-top: 0.75rem;
+      font-weight: 300;
+      letter-spacing: 0.02em;
+    }
+
+    .header-line {
+      width: 40px;
+      height: 1px;
+      background: var(--gold);
+      margin: 1.25rem auto 0;
+    }
+
+    /* Main layout */
+    main {
+      position: relative;
+      z-index: 1;
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 3rem 1.5rem 5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    /* Cards */
+    .card {
+      background: var(--warm-white);
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      padding: 2rem;
+      position: relative;
+      transition: box-shadow 0.3s ease;
+    }
+
+    .card:hover {
+      box-shadow: 0 8px 40px rgba(107, 79, 58, 0.08);
+    }
+
+    .card-number {
+      position: absolute;
+      top: -1px;
+      left: 2rem;
+      background: var(--gold);
+      color: var(--warm-white);
+      font-size: 0.65rem;
+      font-weight: 500;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      padding: 0.2rem 0.6rem;
+    }
+
+    .card-label {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.1rem;
+      color: var(--charcoal);
+      margin-bottom: 1.25rem;
+      margin-top: 0.5rem;
+    }
+
+    /* Upload zone */
+    .upload-zone {
+      border: 1.5px dashed var(--gold-light);
+      border-radius: 2px;
+      padding: 2.5rem 1.5rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      background: linear-gradient(135deg, rgba(201,168,76,0.03), transparent);
+      position: relative;
+    }
+
+    .upload-zone:hover, .upload-zone.dragover {
+      border-color: var(--gold);
+      background: linear-gradient(135deg, rgba(201,168,76,0.07), transparent);
+    }
+
+    .upload-zone input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+      width: 100%;
+      height: 100%;
+    }
+
+    .upload-icon {
+      font-size: 2rem;
+      margin-bottom: 0.75rem;
+      display: block;
+    }
+
+    .upload-text {
+      font-size: 0.85rem;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .upload-text strong {
+      color: var(--brown);
+      font-weight: 500;
+    }
+
+    .file-chosen {
+      display: none;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem 1rem;
+      background: rgba(74, 124, 89, 0.06);
+      border: 1px solid rgba(74, 124, 89, 0.2);
+      border-radius: 2px;
+      margin-top: 1rem;
+    }
+
+    .file-chosen.visible { display: flex; }
+
+    .file-chosen-icon { font-size: 1.2rem; }
+
+    .file-chosen-name {
+      font-size: 0.8rem;
+      color: var(--success);
+      font-weight: 500;
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Preview image */
+    #imgPreview {
+      display: none;
+      width: 100%;
+      max-height: 220px;
+      object-fit: contain;
+      border-radius: 2px;
+      margin-top: 1rem;
+      border: 1px solid var(--border);
+    }
+
+    #imgPreview.visible { display: block; }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.8rem 2rem;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.8rem;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border-radius: 1px;
+    }
+
+    .btn-primary {
+      background: var(--charcoal);
+      color: var(--cream);
+      margin-top: 1.25rem;
+      width: 100%;
+      justify-content: center;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: var(--brown);
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .btn-gold {
+      background: var(--gold);
+      color: var(--charcoal);
+      margin-top: 1.25rem;
+      width: 100%;
+      justify-content: center;
+    }
+
+    .btn-gold:hover:not(:disabled) {
+      background: #B8963E;
+    }
+
+    .btn-gold:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    /* Spinner */
+    .spinner {
+      display: none;
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+
+    .spinner.gold {
+      border: 2px solid rgba(28,28,26,0.2);
+      border-top-color: var(--charcoal);
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .loading .spinner { display: block; }
+    .loading .btn-text { display: none; }
+
+    /* Textarea */
+    textarea {
+      width: 100%;
+      min-height: 130px;
+      padding: 1rem;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.875rem;
+      line-height: 1.7;
+      color: var(--charcoal);
+      background: var(--cream);
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      resize: vertical;
+      transition: border-color 0.2s;
+      outline: none;
+    }
+
+    textarea:focus { border-color: var(--gold); }
+    textarea[readonly] { background: var(--warm-white); cursor: default; }
+
+    /* Language selector */
+    .lang-row {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .lang-label {
+      font-size: 0.75rem;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .lang-options {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      flex: 1;
+    }
+
+    .lang-btn {
+      padding: 0.4rem 0.9rem;
+      font-size: 0.75rem;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 500;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      border-radius: 1px;
+      transition: all 0.15s;
+      letter-spacing: 0.03em;
+    }
+
+    .lang-btn:hover { border-color: var(--gold); color: var(--brown); }
+
+    .lang-btn.active {
+      background: var(--charcoal);
+      border-color: var(--charcoal);
+      color: var(--cream);
+    }
+
+    /* Result area */
+    .result-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+    }
+
+    .copy-btn {
+      font-size: 0.7rem;
+      color: var(--muted);
+      background: none;
+      border: 1px solid var(--border);
+      padding: 0.3rem 0.7rem;
+      cursor: pointer;
+      border-radius: 1px;
+      font-family: 'DM Sans', sans-serif;
+      letter-spacing: 0.05em;
+      transition: all 0.15s;
+    }
+
+    .copy-btn:hover { border-color: var(--gold); color: var(--brown); }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: var(--charcoal);
+      color: var(--cream);
+      padding: 0.75rem 1.5rem;
+      font-size: 0.8rem;
+      letter-spacing: 0.05em;
+      border-radius: 2px;
+      transition: transform 0.3s ease;
+      z-index: 100;
+      white-space: nowrap;
+    }
+
+    .toast.show { transform: translateX(-50%) translateY(0); }
+
+    /* Status pill */
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.7rem;
+      padding: 0.3rem 0.75rem;
+      border-radius: 999px;
+      font-weight: 500;
+      letter-spacing: 0.05em;
+    }
+
+    .status-pill.success {
+      background: rgba(74,124,89,0.1);
+      color: var(--success);
+    }
+
+    .status-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      padding: 2rem;
+      font-size: 0.7rem;
+      color: var(--muted);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      border-top: 1px solid var(--border);
+    }
+
+    /* Animations */
+    .card { animation: fadeUp 0.5s ease both; }
+    .card:nth-child(1) { animation-delay: 0.1s; }
+    .card:nth-child(2) { animation-delay: 0.2s; }
+    .card:nth-child(3) { animation-delay: 0.3s; }
+    .card:nth-child(4) { animation-delay: 0.4s; }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <p class="header-eyebrow">Cloud computing i sistemes distribuïts per a videojocs</p>
+  <h1>Menu<em>Lens</em></h1>
+  <p class="header-sub">Puja una foto de qualsevol menú i rep la traducció a l'instant</p>
+  <div class="header-line"></div>
+</header>
+
+<main>
+
+  <!-- Step 1: Upload -->
+  <div class="card">
+    <span class="card-number">Pas 01</span>
+    <p class="card-label">Selecciona la imatge del menú</p>
+
+    <div class="upload-zone" id="uploadZone">
+      <input type="file" id="imgInput" accept="image/*" capture="environment">
+      <span class="upload-icon">📷</span>
+      <p class="upload-text">
+        <strong>Fes clic o arrossega</strong> una foto aquí<br>
+        JPG, PNG, WEBP — fins a 4MB
+      </p>
+    </div>
+
+    <div class="file-chosen" id="fileChosen">
+      <span class="file-chosen-icon">✓</span>
+      <span class="file-chosen-name" id="fileName"></span>
+    </div>
+
+    <img id="imgPreview" alt="Previsualització">
+
+    <button class="btn btn-primary" id="ocrBtn" disabled onclick="runOCR()">
+      <span class="spinner" id="ocrSpinner"></span>
+      <span class="btn-text">Extreure text</span>
+    </button>
+  </div>
+
+  <!-- Step 2: Detected text -->
+  <div class="card">
+    <span class="card-number">Pas 02</span>
+    <div class="result-header">
+      <p class="card-label" style="margin:0">Text detectat</p>
+      <span id="ocrStatus" style="display:none" class="status-pill success">
+        <span class="status-dot"></span> Text extret
+      </span>
+    </div>
+    <textarea id="detectedText" placeholder="El text del menú apareixerà aquí després d'extreure'l..."></textarea>
+  </div>
+
+  <!-- Step 3: Translate -->
+  <div class="card">
+    <span class="card-number">Pas 03</span>
+    <p class="card-label">Tria l'idioma de destí</p>
+
+    <div class="lang-row">
+      <span class="lang-label">Tradueix a</span>
+      <div class="lang-options" id="langOptions">
+        <button class="lang-btn active" data-lang="ca">Català</button>
+        <button class="lang-btn" data-lang="es">Castellà</button>
+        <button class="lang-btn" data-lang="en">Anglès</button>
+        <button class="lang-btn" data-lang="fr">Francès</button>
+        <button class="lang-btn" data-lang="de">Alemany</button>
+        <button class="lang-btn" data-lang="it">Italià</button>
+        <button class="lang-btn" data-lang="ja">Japonès</button>
+        <button class="lang-btn" data-lang="zh-Hans">Xinès</button>
+      </div>
+    </div>
+
+    <button class="btn btn-gold" id="translateBtn" onclick="runTranslate()">
+      <span class="spinner gold" id="translateSpinner"></span>
+      <span class="btn-text">Traduir</span>
+    </button>
+  </div>
+
+  <!-- Step 4: Result -->
+  <div class="card">
+    <span class="card-number">Resultat</span>
+    <div class="result-header">
+      <p class="card-label" style="margin:0">Traducció</p>
+      <button class="copy-btn" onclick="copyResult()">Copiar</button>
+    </div>
+    <textarea id="translatedText" placeholder="La traducció apareixerà aquí..." readonly></textarea>
+  </div>
+
+</main>
+
+<footer>MenuLens · Azure Computer Vision + Translator · GDDV 2026</footer>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  let selectedLang = 'ca';
+
+  // Language buttons
+  document.getElementById('langOptions').addEventListener('click', e => {
+    if (!e.target.classList.contains('lang-btn')) return;
+    document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+    e.target.classList.add('active');
+    selectedLang = e.target.dataset.lang;
+  });
+
+  // File input
+  document.getElementById('imgInput').addEventListener('change', function() {
+    const file = this.files[0];
+    if (!file) return;
+
+    document.getElementById('fileName').textContent = file.name;
+    document.getElementById('fileChosen').classList.add('visible');
+    document.getElementById('ocrBtn').disabled = false;
+
+    const reader = new FileReader();
+    reader.onload = e => {
+      const preview = document.getElementById('imgPreview');
+      preview.src = e.target.result;
+      preview.classList.add('visible');
+    };
+    reader.readAsDataURL(file);
+  });
+
+  // Drag & drop
+  const zone = document.getElementById('uploadZone');
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+  zone.addEventListener('drop', e => {
+    e.preventDefault();
+    zone.classList.remove('dragover');
+    const file = e.dataTransfer.files[0];
+    if (file) {
+      document.getElementById('imgInput').files = e.dataTransfer.files;
+      document.getElementById('imgInput').dispatchEvent(new Event('change'));
+    }
+  });
+
+  async function runOCR() {
+    const file = document.getElementById('imgInput').files[0];
+    if (!file) return;
+
+    const btn = document.getElementById('ocrBtn');
+    btn.classList.add('loading');
+    btn.disabled = true;
+
+    try {
+      const form = new FormData();
+      form.append('image', file);
+      const res = await fetch('/ocr', { method: 'POST', body: form });
+      const data = await res.json();
+      document.getElementById('detectedText').value = data.text || '(no s\'ha detectat text)';
+      document.getElementById('ocrStatus').style.display = 'inline-flex';
+      showToast('Text extret correctament');
+    } catch(e) {
+      showToast('Error en extreure el text');
+    }
+
+    btn.classList.remove('loading');
+    btn.disabled = false;
+  }
+
+  async function runTranslate() {
+    const text = document.getElementById('detectedText').value;
+    if (!text.trim()) return showToast('Primer extreu el text de la imatge');
+
+    const btn = document.getElementById('translateBtn');
+    btn.classList.add('loading');
+    btn.disabled = true;
+
+    try {
+      const res = await fetch('/translate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text, target_lang: selectedLang })
+      });
+      const data = await res.json();
+      document.getElementById('translatedText').value = data.translated;
+      showToast('Traducció completada');
+    } catch(e) {
+      showToast('Error en traduir');
+    }
+
+    btn.classList.remove('loading');
+    btn.disabled = false;
+  }
+
+  function copyResult() {
+    const text = document.getElementById('translatedText').value;
+    if (!text.trim()) return showToast('No hi ha res a copiar');
+    navigator.clipboard.writeText(text).then(() => showToast('Copiat al portapapers'));
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2500);
+  }
+</script>
+</body>
+</html>
